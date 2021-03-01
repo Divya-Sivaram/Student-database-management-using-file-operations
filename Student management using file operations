@@ -1,0 +1,237 @@
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+class Student implements Serializable{
+    private String id;
+    private String name;
+    private String class1;
+    public final static long serialVersionUID=1;
+
+    public Student() {
+    }
+
+    public Student(String id, String name, String class1) {
+        this.id = id;
+        this.name = name;
+        this.class1 = class1;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getClass1() {
+        return class1;
+    }
+
+    public void setClass1(String class1) {
+        this.class1 = class1;
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", Class='" + class1 + '\'' +
+                '}';
+    }
+}
+
+
+
+public class Demo01 {
+    public static void main(String[] args) throws  FileNotFoundException, ClassNotFoundException {
+
+        // Store student information locally
+        File file = new File("StudentsInfo.txt");
+        ArrayList<Student> list = new ArrayList<>();
+        System.out.println("<Welcome to Student Management System>");
+
+        System.out.println("1.Add\n2.Modify\n3.Delete\n4.Show all current student information\n5.Save student information\n6.Exit system");
+
+        Scanner scanner = new Scanner(System.in);
+
+        int button=0;
+
+        // Call the getInfo function to get the student information in the file, stored in the collection
+        list = getInfo(file);
+
+        // Use the loop to complete the addition, deletion and change function
+        while (true) {
+            button=scanner.nextInt();
+            switch (button) {
+                case 1:{
+                    try {
+                        add(list);
+                    } catch (Exception e) {
+                    }
+                    break;
+                }
+                case 2:{
+                    try {
+                        update(list);
+                    } catch (Exception e) {
+                    }
+                    break;
+                }
+                case 3:{
+                    delete(list);
+                    break;
+                }
+                case 4:{
+                    showInfo(list);
+                    break;
+                }
+                case 5:{
+                    save(file,list);
+                    System.out.println("save success...");
+                    break;
+                }
+                case 6:
+                {
+                    System.exit(0);
+                    break;
+                }
+                default:
+                    System.out.println("The input button is incorrect, please re-enter:");
+            }
+            System.out.println("1.Add\n2.Modify\n3.Delete\n4.Show all current student information\n5.Save student information\n6.Exit system");
+        }
+    }
+
+    // To save student's details
+
+    public static void save(File file, ArrayList<Student> list) throws FileNotFoundException {
+        FileOutputStream fos = new FileOutputStream(file, false);
+        try (ObjectOutputStream objos = new ObjectOutputStream(fos)) {
+            for (Student s : list) {
+                System.out.println("Saving...");
+                objos.writeObject(s);
+            }
+            fos.close();
+            objos.close();
+        } catch (IOException e) {
+        }
+    }
+
+    //To get student's details
+
+    public static ArrayList<Student> getInfo(File file) throws  ClassNotFoundException {
+        ArrayList<Student> list = new ArrayList<>();
+        try (ObjectInputStream objis = new ObjectInputStream(new FileInputStream(file))) {
+            Object o1 = new Object();
+            while ((o1=objis.readObject())!=null){
+                Student s=(Student)o1;
+                list.add(s);
+            }
+            objis.close();
+        } catch (IOException e) {
+        }
+        return list;
+    }
+
+    // To add students details
+
+    public static void add(ArrayList<Student>list) throws IOException {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Please enter student ID:");
+        String no=scanner.next();
+        for (Student s : list) {
+            if (s.getId().equals(no)) {
+                System.out.println("The student number information already exists, please re-enter after checking:");
+                throw new IOException();
+            }
+        }
+        System.out.println("Please enter the student name:");
+        String name=scanner.next();
+        System.out.println("Please enter student class:");
+        String class1=scanner.next();
+        list.add(new Student(no, name, class1));
+    }
+
+    //Show all student information
+
+    public static void showInfo(ArrayList<Student> list) {
+        System.out.println("To display student data"+list.size()+"bar");
+        for (Student s : list) {
+            System.out.println(s);
+        }
+    }
+
+    // modifying student information
+
+    public static void update(ArrayList<Student> list) throws IOException {
+        System.out.println("Please enter the student number to be modified:");
+        Scanner scanner = new Scanner(System.in);
+        String no=scanner.next();
+        int index=-1;
+        boolean flag=true;
+        for (Student s : list) {
+            index++;
+            if (s.getId().equals(no)) {
+                System.out.println("Please enter the modified number:");
+                no = scanner.next();
+                for (Student s1 : list) {
+                    if (no.equals(s1.getId())) {
+                        System.out.println("Enter student number already exists, please re-enter:");
+                        no=scanner.next();
+                    } else {
+                        break;
+                    }
+                }
+                System.out.println("Please enter the modified name:");
+                String name=scanner.next();
+                System.out.println("Please enter the modified class:");
+                String class1=scanner.next();
+                list.set(index, new Student(no, name, class1));
+                flag=false;
+            }
+        }
+        if (flag) {
+            System.out.println("Enter student number does not exist, please re-enter:");
+            throw new IOException();
+        }
+    }
+
+    // deleting student information
+
+    public static void delete(ArrayList<Student> list) {
+        boolean flag = true;
+        boolean flag2 = true;//
+        while (flag) {
+            flag2 = true;
+            System.out.println("Please enter the student number to be deleted:");
+            Scanner scanner = new Scanner(System.in);
+            String no = scanner.next();
+            for (Student s : list) {
+                if (no.equals(s.getId())) {
+                    System.out.println("OK delete the student:" + s + "?\t(Y/N)");
+                    String c = scanner.next();
+                    if (c.equals("Y")||c.equals("y")) {
+                        list.remove(s);
+                        System.out.println("delete successfully...");
+                        return;
+                    }
+                    flag2 = false;
+                }
+            }
+            if (flag2) {
+                System.out.println("To delete student information does not exist");
+            }
+        }}
+}
+
